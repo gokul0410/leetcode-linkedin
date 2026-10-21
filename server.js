@@ -14,6 +14,17 @@ const PORT = process.env.PORT || 3000;
 // 1. Middleware Configuration
 // ============================================================================
 
+// Enable CORS for local file:// previews or external callers
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // Parse JSON request bodies with a defensive size limit (max 50kb)
 // This prevents oversized payloads from exhausting server memory
 app.use(express.json({ limit: '50kb' }));

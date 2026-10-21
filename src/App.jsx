@@ -159,7 +159,12 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/generate', {
+      // Intelligently route to localhost:3000 if opened directly via file:///
+      const apiUrl = window.location.protocol === 'file:' 
+        ? 'http://localhost:3000/api/generate' 
+        : '/api/generate';
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -190,7 +195,11 @@ export default function App() {
       });
 
     } catch (err) {
-      setError(err.message || 'Failed to connect to backend server.');
+      if (err.name === 'TypeError' || err.message?.includes('fetch') || err.message?.includes('Failed to fetch')) {
+        setError('Backend server is offline! Please run "npm start" in your terminal and visit http://localhost:3000 in your browser.');
+      } else {
+        setError(err.message || 'Failed to connect to backend server.');
+      }
     } finally {
       setIsLoading(false);
     }
