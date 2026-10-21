@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeetCode Caption Generator | AI-Powered</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="badge">AI Developer Tool</div>
+      <h1>LeetCode Caption Generator</h1>
+      <p class="subtitle">Turn your solved algorithmic code into concise, insightful, ready-to-post LinkedIn captions.</p>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="main-layout">
+      <!-- Left Column: Input Card -->
+      <section class="card input-card">
+        <div class="card-header">
+          <div class="header-left">
+            <h2>Solution Code</h2>
+            <span class="subtext">Paste your accepted submission</span>
+          </div>
+          <div class="header-right">
+            <!-- Language Selection (C++ by default, extensible to Java/Python) -->
+            <label for="language-select" class="sr-only">Language</label>
+            <select id="language-select" class="language-dropdown">
+              <option value="cpp" selected>C++ (Default)</option>
+              <option value="java">Java</option>
+              <option value="python">Python</option>
+            </select>
+            <button id="sample-btn" type="button" class="btn btn-secondary btn-sm" title="Insert a sample Two Sum C++ solution">
+              Insert Sample
+            </button>
+          </div>
+        </div>
+
+        <div class="editor-container">
+          <textarea 
+            id="code-input" 
+            class="code-editor" 
+            placeholder="// Paste your C++ solution here...&#10;// Example:&#10;class Solution {&#10;public:&#10;    vector<int> twoSum(vector<int>& nums, int target) {&#10;        // your logic...&#10;    }&#10;};"
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+          ></textarea>
+        </div>
+
+        <div class="card-actions">
+          <button id="clear-btn" type="button" class="btn btn-ghost">Clear</button>
+          <button id="generate-btn" type="button" class="btn btn-primary">
+            <span class="btn-text">Generate Caption</span>
+            <span class="btn-icon">✨</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Right Column: Output Card -->
+      <section class="card output-card">
+        <div class="card-header">
+          <div class="header-left">
+            <h2>Generated Caption</h2>
+            <span class="subtext">Ready for your LinkedIn / portfolio post</span>
+          </div>
+          <div class="header-right">
+            <button id="copy-btn" type="button" class="btn btn-secondary btn-sm" style="display: none;">
+              <span id="copy-btn-text">Copy Caption</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="output-content">
+          <!-- Placeholder State (Initial) -->
+          <div id="empty-state" class="empty-state">
+            <div class="empty-icon">📝</div>
+            <h3>No caption generated yet</h3>
+            <p>Paste your C++ code on the left and click <strong>Generate Caption</strong> to see your explanation, intuition, and complexity breakdown.</p>
+          </div>
+
+          <!-- Loading State -->
+          <div id="loading-state" class="loading-state" style="display: none;">
+            <div class="spinner"></div>
+            <p class="loading-title">Analyzing your solution...</p>
+            <p class="loading-subtitle">Extracting intuition, time complexity, and approach.</p>
+          </div>
+
+          <!-- Error Alert Banner -->
+          <div id="error-state" class="error-banner" style="display: none;">
+            <span class="error-icon">⚠️</span>
+            <span id="error-message">An error occurred while generating the caption.</span>
+          </div>
+
+          <!-- Result Area -->
+          <div id="result-state" class="result-container" style="display: none;">
+            <div id="caption-output" class="caption-text"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Built with Node.js, Express & Google Gemini API • Phase 2: Frontend & Mock Workflow</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
