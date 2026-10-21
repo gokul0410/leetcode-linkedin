@@ -347,84 +347,179 @@ body {
 /* ==========================================================================
    Code Studio Window Header
    ========================================================================== */
-.window-header {
-  padding: 0.9rem 1.35rem;
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+/* ==========================================================================
+   Dynamic Daily Streak & AI Auto-Detect Studio Header
+   ========================================================================== */
+.compiler-top-header {
+  padding: 0.95rem 1.35rem;
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.12);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
-.window-left {
+.streak-live-showcase {
   display: flex;
   align-items: center;
-  gap: 1.1rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
-.window-dots {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.dot.red { background-color: var(--color-red); box-shadow: 0 0 10px rgba(239, 68, 68, 0.8); }
-.dot.yellow { background-color: var(--color-yellow); box-shadow: 0 0 10px rgba(250, 204, 21, 0.8); }
-.dot.green { background-color: var(--color-green); box-shadow: 0 0 10px rgba(34, 197, 94, 0.8); }
-
-.tab-pill {
+.streak-flame-badge {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: rgba(59, 130, 246, 0.2);
-  border: 1.5px solid rgba(59, 130, 246, 0.5);
+  gap: 0.35rem;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.streak-flame-icon {
+  font-size: 1.05rem;
+  animation: flameFlicker 1.8s infinite alternate ease-in-out;
+}
+
+@keyframes flameFlicker {
+  0% { transform: scale(1) rotate(-3deg); filter: drop-shadow(0 0 4px #f97316); }
+  50% { transform: scale(1.15) rotate(3deg); filter: drop-shadow(0 0 10px #ef4444); }
+  100% { transform: scale(1.05) rotate(-2deg); filter: drop-shadow(0 0 6px #eab308); }
+}
+
+.streak-flame-text {
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: #ffffff;
+}
+
+.streak-count-box {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  background: rgba(0, 0, 0, 0.5);
   padding: 0.3rem 0.85rem;
   border-radius: var(--radius-sm);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+  border: 1.5px solid var(--color-orange);
+  box-shadow: 0 0 15px rgba(249, 115, 22, 0.35);
 }
 
-.lang-indicator-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-}
-
-.lang-indicator-dot.cpp { background-color: var(--color-blue); box-shadow: 0 0 8px var(--color-blue); }
-.lang-indicator-dot.java { background-color: var(--color-orange); box-shadow: 0 0 8px var(--color-orange); }
-.lang-indicator-dot.python { background-color: var(--color-green); box-shadow: 0 0 8px var(--color-green); }
-
-.tab-filename {
-  font-family: var(--font-code);
-  font-size: 0.84rem;
+.streak-day-label {
+  font-size: 0.78rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-orange);
+  text-transform: uppercase;
 }
 
-.lang-select {
-  background: rgba(0, 0, 0, 0.4);
-  color: #ffffff;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+.streak-day-number {
+  font-size: 1.15rem;
+  font-weight: 900;
+  font-family: var(--font-code);
+  background: linear-gradient(135deg, #fde047, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.streak-sync-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  padding: 0.3rem 0.75rem;
   border-radius: var(--radius-sm);
-  padding: 0.4rem 0.85rem;
-  font-size: 0.82rem;
-  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  color: #86efac;
+}
+
+.sync-pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #22c55e;
+  animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+.sync-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.sync-date-val {
+  color: #ffffff;
+  font-weight: 800;
+  font-family: var(--font-code);
+}
+
+.btn-sync-refresh {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 0.32rem 0.65rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
-  outline: none;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
-.lang-select:hover {
+.btn-sync-refresh:hover {
+  background: rgba(59, 130, 246, 0.25);
   border-color: var(--color-blue);
-  background: rgba(59, 130, 246, 0.2);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.compiler-right-badge {
+  display: flex;
+  align-items: center;
+}
+
+.ai-detect-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(168, 85, 247, 0.25));
+  border: 1.5px solid rgba(168, 85, 247, 0.5);
+  padding: 0.38rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e0e7ff;
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.3);
+}
+
+.ai-detect-sparkle {
+  color: #fbcfe8;
+  font-size: 0.95rem;
+}
+
+.meta-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.meta-auto-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #fde047;
+  background: rgba(234, 179, 8, 0.2);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid rgba(234, 179, 8, 0.4);
 }
 
 /* ==========================================================================

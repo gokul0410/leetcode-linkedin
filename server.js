@@ -34,9 +34,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const { GoogleGenAI } = require('@google/genai');
 
-// Supported programming languages
-const SUPPORTED_LANGUAGES = ['cpp', 'java', 'python'];
-
 // Initialize Google Gen AI client with server-side environment key
 const getAiClient = () => {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -47,9 +44,23 @@ const getAiClient = () => {
 };
 
 /**
+ * Daily Streak Calculation API
+ * Base Anchor: 21-10-2026 is Day 234
+ * Automatically increments every midnight using Date API
+ */
+function calculateStreakDay() {
+  const anchorDate = new Date(2026, 9, 21); // October 21, 2026 (Month 9 is October, 0-indexed)
+  const anchorStreak = 234;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.floor((today.getTime() - anchorDate.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(1, anchorStreak + diffDays);
+}
+
+/**
  * Builds the caption generation prompt adhering strictly to user format
  */
-function buildPrompt({ code, language, day, problemTitle, submissionLink }) {
+function buildPrompt({ code, day, problemTitle, submissionLink }) {
   const cleanDay = (day && day.toString().trim()) || '';
   const dayHeader = cleanDay ? `Day ${cleanDay}` : 'Day [Day Number]';
   const dayNumberOnly = cleanDay.replace(/\D/g, '') || cleanDay;
@@ -94,11 +105,11 @@ Space Complexity: {space_complexity}
    - Do NOT wrap your output in markdown code fences (\`\`\` or \`\`\`markdown).
 
 User Solution Details:
-- Programming Language: ${language}
+- Programming Language: Auto-detect from submitted code (e.g. C++, Java, Python, Go, etc.)
 ${titleHeader ? `- Problem Title: ${titleHeader}` : ''}
 ${cleanDay ? `- Streak Day: ${cleanDay}` : ''}
 - Submitted Code:
-\`\`\`${language}
+\`\`\`
 ${code}
 \`\`\`
 `.trim();
@@ -117,13 +128,29 @@ app.get('/api/health', (req, res) => {
 });
 
 /**
+ * Auto-synced Streak API endpoint based on current date
+ * GET /api/streak
+ */
+app.get('/api/streak', (req, res) => {
+  const streakDay = calculateStreakDay();
+  const now = new Date();
+  res.status(200).json({
+    success: true,
+    day: streakDay,
+    currentDate: now.toISOString().split('T')[0],
+    anchorDate: '2026-10-21',
+    anchorStreak: 234,
+    description: 'Auto-incrementing daily streak based on Date API (21-10-2026 = Day 234)'
+  });
+});
+
+/**
  * Caption generation endpoint
  * POST /api/generate
  * 
  * Expected JSON Body:
  * {
  *   "code": "string (required, max 10,000 characters)",
- *   "language": "cpp" | "java" | "python" (optional, defaults to "cpp"),
  *   "day": "string | number" (optional, e.g. "234"),
  *   "problemTitle": "string" (optional),
  *   "submissionLink": "string" (optional)
@@ -133,7 +160,6 @@ app.post('/api/generate', async (req, res, next) => {
   try {
     const { 
       code, 
-      language = 'cpp',
       day = '',
       problemTitle = '',
       submissionLink = ''
@@ -162,13 +188,8 @@ app.post('/api/generate', async (req, res, next) => {
       });
     }
 
-    // 4. Validation: Verify programming language
-    const normalizedLanguage = language.toLowerCase();
-    if (!SUPPORTED_LANGUAGES.includes(normalizedLanguage)) {
-      return res.status(400).json({
-        error: `Unsupported language "${language}". Supported options: ${SUPPORTED_LANGUAGES.join(', ')}.`
-      });
-    }
+    // 4. Language is automatically detected by Gemini directly from the code!
+    // No hardcoded language restrictions needed.
 
     // 5. Initialize AI Client & Check Secret
     const ai = getAiClient();
@@ -181,7 +202,6 @@ app.post('/api/generate', async (req, res, next) => {
     // 6. Build the caption prompt
     const prompt = buildPrompt({
       code: trimmedCode,
-      language: normalizedLanguage,
       day,
       problemTitle,
       submissionLink
@@ -215,7 +235,6 @@ app.post('/api/generate', async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      language: normalizedLanguage,
       caption: cleanCaption
     });
 

@@ -81,10 +81,29 @@ public:
   }
 };
 
+// Calculate dynamic streak day automatically from current date
+// Base anchor: 21-10-2026 is Day 234 (automatically increments every midnight!)
+function getAutoStreakDay() {
+  const anchorDate = new Date(2026, 9, 21); // October 21, 2026
+  const anchorStreak = 234;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.floor((today.getTime() - anchorDate.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(1, anchorStreak + diffDays);
+}
+
+// Format current date as DD-MM-YYYY
+function getFormattedCurrentDate() {
+  const now = new Date();
+  const d = String(now.getDate()).padStart(2, '0');
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const y = now.getFullYear();
+  return `${d}-${m}-${y}`;
+}
+
 export default function App() {
   const [code, setCode] = useState(PRESETS.minOpsSort.code);
-  const [language, setLanguage] = useState('cpp');
-  const [day, setDay] = useState('235');
+  const [day, setDay] = useState(() => getAutoStreakDay().toString());
   const [problemTitle, setProblemTitle] = useState('Minimum Operations to Sort a String');
   const [submissionLink, setSubmissionLink] = useState('');
   
@@ -100,6 +119,21 @@ export default function App() {
   const [theme, setTheme] = useState('rainbow'); // 'rainbow' | 'sunset' | 'cyber'
   const textareaRef = useRef(null);
   const lineNumbersRef = useRef(null);
+
+  // Sync streak count on mount with backend Date API endpoint
+  useEffect(() => {
+    fetch('/api/streak')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.day) {
+          setDay(data.day.toString());
+        }
+      })
+      .catch(() => {
+        // Fallback to client-side Date API calculation
+        setDay(getAutoStreakDay().toString());
+      });
+  }, []);
 
   // Cycling loading feedback steps to give real-time feel
   const loadingMessages = [
@@ -157,8 +191,6 @@ export default function App() {
   // Preset Selection
   const applyPreset = (preset) => {
     setCode(preset.code);
-    setLanguage(preset.language);
-    setDay(preset.day);
     setProblemTitle(preset.title);
     setError('');
     showToast(`Loaded ${preset.title}`);
@@ -189,7 +221,6 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           code: trimmed,
-          language,
           day: day.trim(),
           problemTitle: problemTitle.trim(),
           submissionLink: submissionLink.trim()
@@ -366,31 +397,40 @@ export default function App() {
         
         {/* LEFT COLUMN: Developer Code Studio */}
         <section className="studio-card code-studio card-glow-blue">
-          {/* macOS Style Window Titlebar */}
-          <div className="window-header">
-            <div className="window-left">
-              <div className="window-dots">
-                <span className="dot red" title="Close" />
-                <span className="dot yellow" title="Minimize" />
-                <span className="dot green" title="Maximize" />
+          {/* Dynamic Daily Streak & AI Auto-Detect Studio Header */}
+          <div className="compiler-top-header">
+            <div className="streak-live-showcase">
+              <div className="streak-flame-badge">
+                <span className="streak-flame-icon">🔥</span>
+                <span className="streak-flame-text">ACTIVE STREAK</span>
               </div>
-              <div className="tab-pill">
-                <span className={`lang-indicator-dot ${language}`} />
-                <span className="tab-filename">Solution.{language === 'cpp' ? 'cpp' : language === 'java' ? 'java' : 'py'}</span>
+              <div className="streak-count-box">
+                <span className="streak-day-label">Day</span>
+                <span className="streak-day-number">{day}</span>
               </div>
+              <div className="streak-sync-badge">
+                <span className="sync-pulse-dot" />
+                <span className="sync-label">Date API Synced:</span>
+                <strong className="sync-date-val">{getFormattedCurrentDate()}</strong>
+              </div>
+              <button 
+                type="button" 
+                className="btn-sync-refresh"
+                onClick={() => {
+                  const autoDay = getAutoStreakDay().toString();
+                  setDay(autoDay);
+                  showToast(`⚡ Synced to Today's Streak: Day ${autoDay}`);
+                }}
+                title="Click to reset to today's auto-calculated streak from Date API"
+              >
+                🔄 Auto
+              </button>
             </div>
 
-            <div className="window-right">
-              <div className="lang-picker-wrapper">
-                <select 
-                  className={`lang-select lang-tag-${language}`}
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                >
-                  <option value="cpp">🔹 C++ (Default)</option>
-                  <option value="java">🔸 Java</option>
-                  <option value="python">🐍 Python</option>
-                </select>
+            <div className="compiler-right-badge">
+              <div className="ai-detect-pill">
+                <span className="ai-detect-sparkle">✨</span>
+                <span className="ai-detect-text">Gemini Auto-Detects Language</span>
               </div>
             </div>
           </div>
@@ -399,14 +439,17 @@ export default function App() {
           <div className="meta-strip">
             {/* 1. Day Box in Vibrant Orange Flame */}
             <div className="meta-group day-box theme-orange">
-              <label>STREAK DAY</label>
+              <div className="meta-label-row">
+                <label>STREAK DAY</label>
+                <span className="meta-auto-tag">⚡ Auto-increment</span>
+              </div>
               <div className="input-with-icon day-field">
                 <span className="input-badge flame-orange">🔥 Day</span>
                 <input 
                   type="text" 
                   value={day} 
                   onChange={(e) => setDay(e.target.value)}
-                  placeholder="235"
+                  placeholder="234"
                   maxLength="10"
                 />
               </div>
@@ -476,7 +519,7 @@ export default function App() {
           {/* IDE Bottom Status Bar with Colorful Badges */}
           <div className="editor-statusbar">
             <div className="status-left">
-              <span className="status-badge blue">{language.toUpperCase()}</span>
+              <span className="status-badge blue">✨ AI AUTO-DETECT</span>
               <span className="status-badge cyan">UTF-8</span>
               <span className="status-badge pink">Ln {cursorPos.line}, Col {cursorPos.col}</span>
             </div>
