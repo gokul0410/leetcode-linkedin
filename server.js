@@ -21,8 +21,77 @@ app.use(express.json({ limit: '50kb' }));
 // Serve frontend static files from the 'public' folder
 app.use(express.static(path.join(__dirname, 'public')));
 
+const { GoogleGenAI } = require('@google/genai');
+
 // Supported programming languages
 const SUPPORTED_LANGUAGES = ['cpp', 'java', 'python'];
+
+// Initialize Google Gen AI client with server-side environment key
+const getAiClient = () => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+    return null;
+  }
+  return new GoogleGenAI({ apiKey });
+};
+
+/**
+ * Builds the caption generation prompt adhering strictly to user format
+ */
+function buildPrompt({ code, language, day, problemTitle, submissionLink }) {
+  const cleanDay = (day && day.toString().trim()) || '';
+  const dayHeader = cleanDay ? `Day ${cleanDay}` : 'Day [Day Number]';
+  const dayNumberOnly = cleanDay.replace(/\D/g, '') || cleanDay;
+  const dayTag = dayNumberOnly ? `#day${dayNumberOnly}` : '#streak';
+
+  const titleHeader = (problemTitle && problemTitle.trim()) || '';
+  const cleanLink = (submissionLink && submissionLink.trim()) || '[Paste submission link here]';
+
+  return `
+You are an expert software engineer and competitive programmer.
+Generate a concise, ready-to-post LinkedIn solution caption for a LeetCode problem based ONLY on the submitted code.
+
+### Required Output Template:
+${dayHeader} : ${titleHeader ? titleHeader : '{identifiable_problem_title}'}
+Submission Link : ${cleanLink}
+
+My approach is to {explanation}
+
+Time Complexity: {time_complexity}
+Space Complexity: {space_complexity}
+
+#leetcode #500days ${dayTag} #streak #dailyproblem #DSA House Of Programming Expertise (HOPE)
+
+### Guidelines:
+1. First line:
+   - Format: "${dayHeader} : <Problem Title>".
+   - If problem title was not specified by the user, reliably identify the problem title from the method name, class name, or comments.
+2. Second line:
+   - Format: "Submission Link : ${cleanLink}".
+3. Approach paragraph:
+   - Must start with: "My approach is to ".
+   - Write in clear, natural first-person prose describing the exact steps the submitted code performs.
+   - Do not claim an algorithm or optimization that the code does not actually implement.
+   - Avoid generic motivational endings, hyperbolic corporate buzzwords, and unnecessary emojis.
+4. Complexity:
+   - Accurately determine Time Complexity and Space Complexity (auxiliary memory) strictly from the submitted code.
+   - State them clearly as "Time Complexity: O(...)" and "Space Complexity: O(...)".
+5. Hashtags line:
+   - End with: "#leetcode #500days ${dayTag} #streak #dailyproblem #DSA House Of Programming Expertise (HOPE)"
+6. Output format:
+   - Return ONLY the clean, raw text of the post.
+   - Do NOT wrap your output in markdown code fences (\`\`\` or \`\`\`markdown).
+
+User Solution Details:
+- Programming Language: ${language}
+${titleHeader ? `- Problem Title: ${titleHeader}` : ''}
+${cleanDay ? `- Streak Day: ${cleanDay}` : ''}
+- Submitted Code:
+\`\`\`${language}
+${code}
+\`\`\`
+`.trim();
+}
 
 // ============================================================================
 // 2. API Routes
@@ -43,12 +112,21 @@ app.get('/api/health', (req, res) => {
  * Expected JSON Body:
  * {
  *   "code": "string (required, max 10,000 characters)",
- *   "language": "cpp" | "java" | "python" (optional, defaults to "cpp")
+ *   "language": "cpp" | "java" | "python" (optional, defaults to "cpp"),
+ *   "day": "string | number" (optional, e.g. "234"),
+ *   "problemTitle": "string" (optional),
+ *   "submissionLink": "string" (optional)
  * }
  */
 app.post('/api/generate', async (req, res, next) => {
   try {
-    const { code, language = 'cpp' } = req.body || {};
+    const { 
+      code, 
+      language = 'cpp',
+      day = '',
+      problemTitle = '',
+      submissionLink = ''
+    } = req.body || {};
 
     // 1. Validation: Verify code existence and type
     if (!code || typeof code !== 'string') {
@@ -81,33 +159,77 @@ app.post('/api/generate', async (req, res, next) => {
       });
     }
 
-    // Phase 3 Backend Verification Mock
-    // In Phase 5, this will call the official Google Gen AI SDK
-    const mockCaption = 
-`🚀 Solved LeetCode Problem in ${normalizedLanguage.toUpperCase()}!
+    // 5. Initialize AI Client & Check Secret
+    const ai = getAiClient();
+    if (!ai) {
+      return res.status(500).json({
+        error: 'Gemini API key is not configured on the server. Please verify your .env file.'
+      });
+    }
 
-💡 Intuition:
-Optimal approach utilizing efficient data structures to minimize redundant computations.
+    // 6. Build the caption prompt
+    const prompt = buildPrompt({
+      code: trimmedCode,
+      language: normalizedLanguage,
+      day,
+      problemTitle,
+      submissionLink
+    });
 
-⚙️ Approach:
-1. Parse and process input constraints.
-2. Maintain state using optimal auxiliary data structures.
-3. Return the calculated result within expected constraints.
+    // 7. Call Gemini with automatic model resilience
+    const primaryModel = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+    const fallbackModel = primaryModel === 'gemini-3.5-flash-lite' ? 'gemini-3.8-flash' : 'gemini-3.5-flash-lite';
 
-⏱️ Complexity:
-- Time Complexity: O(n) (Identified from submitted code structure)
-- Space Complexity: O(n) (Auxiliary storage for state tracking)
+    let rawCaption = '';
+    try {
+      const response = await ai.models.generateContent({
+        model: primaryModel,
+        contents: prompt
+      });
+      rawCaption = response.text || '';
+    } catch (primaryError) {
+      console.warn(`[AI Notice] Primary model ${primaryModel} failed (${primaryError.message.slice(0, 80)}). Trying fallback ${fallbackModel}...`);
+      const fallbackResponse = await ai.models.generateContent({
+        model: fallbackModel,
+        contents: prompt
+      });
+      rawCaption = fallbackResponse.text || '';
+    }
 
-#LeetCode #${normalizedLanguage === 'cpp' ? 'Cpp' : normalizedLanguage.toUpperCase()} #Algorithms #DataStructures #CodingInterview`;
+    // Clean up any stray markdown fences if returned
+    let cleanCaption = rawCaption.trim();
+    if (cleanCaption.startsWith('```')) {
+      cleanCaption = cleanCaption.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim();
+    }
 
     return res.status(200).json({
       success: true,
       language: normalizedLanguage,
-      caption: mockCaption
+      caption: cleanCaption
     });
 
   } catch (error) {
+    // Provide safe, descriptive errors without leaking API keys or secrets
+    if (error.status === 401 || error.status === 403 || error.message?.includes('API_KEY_INVALID')) {
+      return res.status(401).json({
+        error: 'Invalid or unauthorized Gemini API key. Please verify the key in your .env file.'
+      });
+    }
+
+    if (error.status === 429 || error.message?.includes('RESOURCE_EXHAUSTED')) {
+      return res.status(429).json({
+        error: 'Gemini API rate limit exceeded. Please wait a moment before trying again.'
+      });
+    }
+
+    if (error.status === 503 || error.message?.includes('UNAVAILABLE')) {
+      return res.status(503).json({
+        error: 'Gemini AI service is temporarily experiencing high demand. Please try again shortly.'
+      });
+    }
+
     // Pass unexpected errors to the global error handler
+
     next(error);
   }
 });

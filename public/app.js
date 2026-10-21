@@ -1,11 +1,15 @@
 /**
  * LeetCode AI Caption Generator - Frontend Logic
- * Phase 2: UI State Management and Mock Output Simulation
+ * Phase 5: Live Gemini API Integration with LinkedIn Streak Formatting
  */
 
 // 1. Cache DOM Elements
 const codeInput = document.getElementById('code-input');
 const languageSelect = document.getElementById('language-select');
+const dayInput = document.getElementById('day-input');
+const titleInput = document.getElementById('title-input');
+const linkInput = document.getElementById('link-input');
+
 const generateBtn = document.getElementById('generate-btn');
 const clearBtn = document.getElementById('clear-btn');
 const sampleBtn = document.getElementById('sample-btn');
@@ -42,9 +46,8 @@ public:
     }
 };`;
 
-// 2. Helper: Set UI State (clean state transitions)
+// 2. Helper: Set UI State
 function setUiState(state) {
-  // Reset all dynamic blocks
   emptyState.style.display = 'none';
   loadingState.style.display = 'none';
   errorState.style.display = 'none';
@@ -82,47 +85,20 @@ function showError(message) {
   setUiState('error');
 }
 
-// 4. Mock Caption Generator (Phase 2 Simulation)
-// In Phase 5, this will be replaced with our live Express fetch('/api/generate') call.
-function generateMockCaption(code, language) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Create a realistic sample caption formatted for LinkedIn / LeetCode
-      const mockCaption = 
-`🚀 Solved LeetCode 1: Two Sum in ${language.toUpperCase()}!
-
-💡 Intuition:
-Instead of checking all pairs with a brute-force O(n²) search, we can use a hash map to remember numbers we have already seen. As we iterate through the array, we check if the complement (target - current number) already exists in our map.
-
-⚙️ Approach:
-1. Initialize an unordered_map to store values and their indices.
-2. For each element at index i, calculate 'complement = target - nums[i]'.
-3. If the complement is in the map, return the saved index and i.
-4. Otherwise, insert the current number and index into the map.
-
-⏱️ Complexity:
-- Time Complexity: O(n) — single pass through the array with average O(1) hash map lookups.
-- Space Complexity: O(n) — stores up to n elements in the hash map.
-
-#LeetCode #Cpp #CodingInterview #DataStructures #Algorithms #SoftwareEngineering`;
-
-      resolve(mockCaption);
-    }, 1200); // Simulate 1.2 second latency
-  });
-}
-
-// 5. Event: Generate Caption Click
+// 4. Event: Generate Caption Click (Live API Call)
 generateBtn.addEventListener('click', async () => {
   const code = codeInput.value.trim();
   const language = languageSelect.value;
+  const day = dayInput.value.trim();
+  const problemTitle = titleInput.value.trim();
+  const submissionLink = linkInput.value.trim();
 
-  // Validation: Check for empty input
+  // Client-Side Validation
   if (!code) {
     showError('Please paste your solution code before clicking "Generate Caption".');
     return;
   }
 
-  // Minimum length check (avoid single-character or trivial input)
   if (code.length < 15) {
     showError('The provided code snippet is too short. Please paste a complete function or solution.');
     return;
@@ -132,18 +108,38 @@ generateBtn.addEventListener('click', async () => {
   setUiState('loading');
 
   try {
-    // Phase 2: Use mock generation
-    const caption = await generateMockCaption(code, language);
+    // Live call to Express backend POST /api/generate
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        code,
+        language,
+        day,
+        problemTitle,
+        submissionLink
+      })
+    });
 
-    // Render result
-    captionOutput.textContent = caption;
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || `Server responded with status ${response.status}`);
+    }
+
+    // Render generated caption
+    captionOutput.textContent = data.caption;
     setUiState('result');
+
   } catch (err) {
-    showError('Failed to generate caption. Please try again.');
+    console.error('[Generate Error]:', err);
+    showError(err.message || 'Failed to generate caption. Please check the backend connection and try again.');
   }
 });
 
-// 6. Event: Copy Caption to Clipboard
+// 5. Event: Copy Caption to Clipboard
 copyBtn.addEventListener('click', async () => {
   const textToCopy = captionOutput.textContent;
   if (!textToCopy) return;
@@ -161,18 +157,30 @@ copyBtn.addEventListener('click', async () => {
     }, 2000);
   } catch (err) {
     console.error('Failed to copy to clipboard:', err);
+    // Fallback: select text manually
+    const range = document.createRange();
+    range.selectNodeContents(captionOutput);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
   }
 });
 
-// 7. Event: Clear Button
+// 6. Event: Clear Button
 clearBtn.addEventListener('click', () => {
   codeInput.value = '';
+  dayInput.value = '';
+  titleInput.value = '';
+  linkInput.value = '';
   setUiState('empty');
   codeInput.focus();
 });
 
-// 8. Event: Insert Sample Button
+// 7. Event: Insert Sample Button
 sampleBtn.addEventListener('click', () => {
+  dayInput.value = '234';
+  titleInput.value = 'Two Sum';
+  linkInput.value = '';
   codeInput.value = SAMPLE_CPP_CODE;
   setUiState('empty');
 });

@@ -192,6 +192,67 @@ body {
 }
 
 /* ==========================================================================
+   Streak & Problem Metadata Form Rows
+   ========================================================================== */
+.metadata-row {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: rgba(255, 255, 255, 0.015);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-wrap: wrap;
+}
+
+.input-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 140px;
+}
+
+.input-field-group.flex-2 {
+  flex: 2;
+  min-width: 220px;
+}
+
+.input-field-group.flex-full {
+  flex: 1 1 100%;
+}
+
+.input-field-group label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.input-field-group .label-hint {
+  font-weight: normal;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.input-field-group input {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-field-group input:focus {
+  border-color: var(--border-focus);
+}
+
+.input-field-group input::placeholder {
+  color: #4b5563;
+}
+
+/* ==========================================================================
    Code Editor Input Area
    ========================================================================== */
 .editor-container {
