@@ -3,14 +3,33 @@ import confetti from 'canvas-confetti';
 
 // Pre-configured code templates for instant testing
 const PRESETS = {
+  minOpsSort: {
+    id: 'minOpsSort',
+    title: 'Minimum Operations to Sort a String',
+    day: '235',
+    language: 'cpp',
+    difficulty: 'Medium',
+    code: `class Solution {
+public:
+    int minOperations(string s) {
+        string sorted_s = s;
+        sort(sorted_s.begin(), sorted_s.end());
+        
+        if (s == sorted_s) return 0;
+        if (s.length() == 2) return -1;
+        if (s.front() == sorted_s.front() || s.back() == sorted_s.back()) return 1;
+        
+        return 2;
+    }
+};`
+  },
   twoSum: {
+    id: 'twoSum',
     title: 'Two Sum',
     day: '234',
     language: 'cpp',
-    code: `// Problem: Two Sum (LeetCode #1)
-// Goal: Find indices of two numbers that add up to target
-
-class Solution {
+    difficulty: 'Easy',
+    code: `class Solution {
 public:
     vector<int> twoSum(vector<int>& nums, int target) {
         unordered_map<int, int> numMap; // value -> index
@@ -29,28 +48,12 @@ public:
     }
 };`
   },
-  minOpsSort: {
-    title: 'Minimum Operations to Sort a String',
-    day: '235',
-    language: 'cpp',
-    code: `class Solution {
-public:
-    int minOperations(string s) {
-        string sorted_s = s;
-        sort(sorted_s.begin(), sorted_s.end());
-        
-        if (s == sorted_s) return 0;
-        if (s.length() == 2) return -1;
-        if (s.front() == sorted_s.front() || s.back() == sorted_s.back()) return 1;
-        
-        return 2;
-    }
-};`
-  },
   validParentheses: {
+    id: 'validParentheses',
     title: 'Valid Parentheses',
     day: '236',
     language: 'cpp',
+    difficulty: 'Easy',
     code: `class Solution {
 public:
     bool isValid(string s) {
@@ -78,7 +81,7 @@ public:
 export default function App() {
   const [code, setCode] = useState(PRESETS.minOpsSort.code);
   const [language, setLanguage] = useState('cpp');
-  const [day, setDay] = useState('234');
+  const [day, setDay] = useState('235');
   const [problemTitle, setProblemTitle] = useState('Minimum Operations to Sort a String');
   const [submissionLink, setSubmissionLink] = useState('');
   
@@ -92,6 +95,7 @@ export default function App() {
 
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
   const textareaRef = useRef(null);
+  const lineNumbersRef = useRef(null);
 
   // Cycling loading feedback steps to give real-time feel
   const loadingMessages = [
@@ -106,15 +110,23 @@ export default function App() {
     if (isLoading) {
       interval = setInterval(() => {
         setLoadingStep((prev) => (prev + 1) % loadingMessages.length);
-      }, 1400);
+      }, 1300);
     } else {
       setLoadingStep(0);
     }
     return () => clearInterval(interval);
   }, [isLoading]);
 
+  // Synchronize line numbers scroll with textarea
+  const handleScroll = () => {
+    if (textareaRef.current && lineNumbersRef.current) {
+      lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
+    }
+  };
+
   // Update cursor position line & col
   const handleCursorUpdate = (e) => {
+    handleScroll();
     const text = e.target.value;
     const selStart = e.target.selectionStart;
     const lines = text.substring(0, selStart).split('\n');
@@ -124,23 +136,28 @@ export default function App() {
     });
   };
 
+  // Keyboard shortcut Ctrl+Enter or Cmd+Enter to generate
+  const handleKeyDown = (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      handleGenerate();
+    }
+  };
+
   // Toast notification auto-dismiss
   const showToast = (msg) => {
     setToast(msg);
-    setTimeout(() => setToast(''), 3000);
+    setTimeout(() => setToast(''), 3200);
   };
 
   // Preset Selection
-  const applyPreset = (key) => {
-    const preset = PRESETS[key];
-    if (preset) {
-      setCode(preset.code);
-      setLanguage(preset.language);
-      setDay(preset.day);
-      setProblemTitle(preset.title);
-      setError('');
-      showToast(`Loaded "${preset.title}" preset`);
-    }
+  const applyPreset = (preset) => {
+    setCode(preset.code);
+    setLanguage(preset.language);
+    setDay(preset.day);
+    setProblemTitle(preset.title);
+    setError('');
+    showToast(`Loaded ${preset.title}`);
   };
 
   // Generate Caption API Call
@@ -159,7 +176,6 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      // Intelligently route to localhost:3000 if opened directly via file:///
       const apiUrl = window.location.protocol === 'file:' 
         ? 'http://localhost:3000/api/generate' 
         : '/api/generate';
@@ -186,17 +202,17 @@ export default function App() {
       setActiveTab('preview');
       showToast('Caption generated successfully!');
 
-      // Gentle celebratory micro-burst
+      // Vibrant Celebration Confetti
       confetti({
-        particleCount: 40,
-        spread: 60,
-        origin: { y: 0.8 },
-        colors: ['#6366f1', '#38bdf8', '#10b981']
+        particleCount: 50,
+        spread: 70,
+        origin: { y: 0.75 },
+        colors: ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899']
       });
 
     } catch (err) {
       if (err.name === 'TypeError' || err.message?.includes('fetch') || err.message?.includes('Failed to fetch')) {
-        setError('Backend server is offline! Please run "npm start" in your terminal and visit http://localhost:3000 in your browser.');
+        setError('Backend server is offline! Please ensure "npm start" is running in your terminal and visit http://localhost:3000');
       } else {
         setError(err.message || 'Failed to connect to backend server.');
       }
@@ -213,12 +229,12 @@ export default function App() {
       setCopied(true);
       showToast('✓ Caption copied to clipboard!');
 
-      // Rich Confetti Celebration Effect
+      // Rich Multi-Color Confetti Celebration
       confetti({
-        particleCount: 80,
-        spread: 70,
+        particleCount: 90,
+        spread: 80,
         origin: { y: 0.6 },
-        colors: ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b']
+        colors: ['#6366f1', '#a855f7', '#06b6d4', '#10b981', '#f59e0b', '#ec4899']
       });
 
       setTimeout(() => setCopied(false), 2200);
@@ -227,134 +243,172 @@ export default function App() {
     }
   };
 
-  // Calculate quick metrics for analytics tab
+  // Analytics Metrics Calculation
   const getAnalytics = () => {
-    if (!caption) return { chars: 0, words: 0, hashtags: 0, lines: 0 };
+    if (!caption) return { chars: 0, words: 0, hashtags: 0, lines: 0, score: 0 };
     const words = caption.trim().split(/\s+/).filter(Boolean).length;
     const chars = caption.length;
     const hashtags = (caption.match(/#[a-zA-Z0-9_]+/g) || []).length;
     const lines = caption.split('\n').length;
-    return { chars, words, hashtags, lines };
+    
+    // Algorithmic optimization score (ideal LinkedIn post: 80-220 words, 3-8 hashtags)
+    let score = 70;
+    if (words >= 80 && words <= 250) score += 15;
+    if (hashtags >= 3 && hashtags <= 8) score += 10;
+    if (caption.includes('Complexity')) score += 5;
+
+    return { chars, words, hashtags, lines, score: Math.min(100, score) };
   };
 
   const analytics = getAnalytics();
+  const lineCount = Math.max(1, code.split('\n').length);
 
   return (
     <div className="pro-app">
-      {/* Background Ambient Glows */}
-      <div className="ambient-glow glow-1" />
-      <div className="ambient-glow glow-2" />
+      {/* Dynamic Background Mesh Glows */}
+      <div className="ambient-mesh glow-violet" />
+      <div className="ambient-mesh glow-cyan" />
+      <div className="ambient-mesh glow-amber" />
 
       {/* Floating Toast Notification */}
       {toast && (
         <div className="toast-notification">
-          <span className="toast-icon">✨</span>
+          <span className="toast-sparkle">✨</span>
           <span className="toast-text">{toast}</span>
         </div>
       )}
 
-      {/* Header Navigation */}
+      {/* Top Header Bar */}
       <header className="navbar">
         <div className="nav-container">
           <div className="brand">
-            <div className="brand-logo">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <div className="brand-icon-wrapper">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#38bdf8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 17L12 22L22 17" stroke="#a855f7" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 12L12 17L22 12" stroke="#6366f1" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             <div className="brand-text">
               <div className="brand-title">
-                StreakForge <span className="pro-tag">PRO</span>
+                StreakForge <span className="gradient-badge">PRO</span>
               </div>
-              <div className="brand-subtitle">LeetCode & LinkedIn Caption Architect</div>
+              <div className="brand-subtitle">LeetCode & LinkedIn Caption Studio</div>
             </div>
           </div>
 
-          <div className="nav-badges">
-            <span className="workspace-badge">Developer Studio</span>
+          <div className="nav-center-presets">
+            <span className="presets-label">⚡ QUICK PRESETS:</span>
+            {Object.values(PRESETS).map((p) => (
+              <button 
+                key={p.id}
+                type="button" 
+                className={`preset-chip ${problemTitle === p.title ? 'active' : ''}`}
+                onClick={() => applyPreset(p)}
+              >
+                {p.title}
+              </button>
+            ))}
+          </div>
+
+          <div className="nav-right">
+            <span className="developer-tag">Developer Studio</span>
           </div>
         </div>
       </header>
 
-      {/* Main Studio Layout */}
+      {/* Main Studio Grid */}
       <main className="studio-container">
         
         {/* LEFT COLUMN: Developer Code Studio */}
         <section className="studio-card code-studio">
-          {/* Window Chrome / Bar */}
+          {/* macOS Style Window Titlebar */}
           <div className="window-header">
-            <div className="window-controls">
-              <span className="dot red" />
-              <span className="dot yellow" />
-              <span className="dot green" />
-              <span className="window-title">Solution.{language === 'cpp' ? 'cpp' : language === 'java' ? 'java' : 'py'}</span>
+            <div className="window-left">
+              <div className="window-dots">
+                <span className="dot red" />
+                <span className="dot yellow" />
+                <span className="dot green" />
+              </div>
+              <div className="tab-pill">
+                <span className={`lang-indicator-dot ${language}`} />
+                <span className="tab-filename">Solution.{language === 'cpp' ? 'cpp' : language === 'java' ? 'java' : 'py'}</span>
+              </div>
             </div>
 
-            <div className="window-actions">
-              <select 
-                className="select-preset" 
-                onChange={(e) => e.target.value && applyPreset(e.target.value)}
-                defaultValue=""
-              >
-                <option value="" disabled>⚡ Load Preset Problem...</option>
-                <option value="minOpsSort">Minimum Operations to Sort String (Day 235)</option>
-                <option value="twoSum">Two Sum (Day 234)</option>
-                <option value="validParentheses">Valid Parentheses (Day 236)</option>
-              </select>
-
-              <select 
-                className="select-lang"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-              >
-                <option value="cpp">C++ (Default)</option>
-                <option value="java">Java</option>
-                <option value="python">Python</option>
-              </select>
+            <div className="window-right">
+              <div className="lang-picker-wrapper">
+                <select 
+                  className="lang-select"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                >
+                  <option value="cpp">C++ (Default)</option>
+                  <option value="java">Java</option>
+                  <option value="python">Python</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Metadata Bar (Streak Day, Title, Link) */}
+          {/* Vibrant Streak Metadata Control Bar */}
           <div className="meta-strip">
-            <div className="meta-input-group day-group">
+            <div className="meta-group day-box">
               <label>STREAK DAY</label>
-              <div className="input-with-prefix">
-                <span className="prefix">Day</span>
+              <div className="input-with-icon day-field">
+                <span className="input-badge flame">🔥 Day</span>
                 <input 
                   type="text" 
                   value={day} 
                   onChange={(e) => setDay(e.target.value)}
-                  placeholder="234"
+                  placeholder="235"
                   maxLength="10"
                 />
               </div>
             </div>
 
-            <div className="meta-input-group title-group">
-              <label>PROBLEM TITLE <span className="hint">(Optional - auto deduced if empty)</span></label>
-              <input 
-                type="text" 
-                value={problemTitle} 
-                onChange={(e) => setProblemTitle(e.target.value)}
-                placeholder="e.g. Minimum Operations to Sort a String"
-              />
+            <div className="meta-group title-box">
+              <label>PROBLEM TITLE <span className="hint">(Optional - auto-deduced if empty)</span></label>
+              <div className="input-with-icon">
+                <span className="input-badge icon-badge">🏷️</span>
+                <input 
+                  type="text" 
+                  value={problemTitle} 
+                  onChange={(e) => setProblemTitle(e.target.value)}
+                  placeholder="e.g. Minimum Operations to Sort a String"
+                />
+              </div>
             </div>
 
-            <div className="meta-input-group link-group">
+            <div className="meta-group link-box">
               <label>SUBMISSION LINK <span className="hint">(Optional - leave blank for placeholder)</span></label>
-              <input 
-                type="text" 
-                value={submissionLink} 
-                onChange={(e) => setSubmissionLink(e.target.value)}
-                placeholder="e.g. https://lnkd.in/... or leave blank"
-              />
+              <div className="input-with-icon">
+                <span className="input-badge icon-badge">🔗</span>
+                <input 
+                  type="text" 
+                  value={submissionLink} 
+                  onChange={(e) => setSubmissionLink(e.target.value)}
+                  placeholder="e.g. https://lnkd.in/... or leave blank"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Code Editor Body */}
-          <div className="editor-wrapper">
+          {/* Real Code Editor with Visible Line Numbers Gutter */}
+          <div className="editor-workspace">
+            {/* Synchronized Line Numbers Gutter */}
+            <div ref={lineNumbersRef} className="line-numbers-gutter" aria-hidden="true">
+              {Array.from({ length: lineCount }, (_, i) => (
+                <div 
+                  key={i + 1} 
+                  className={`gutter-line ${cursorPos.line === i + 1 ? 'active-line' : ''}`}
+                >
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+
+            {/* Code Textarea */}
             <textarea
               ref={textareaRef}
               className="code-textarea"
@@ -362,7 +416,9 @@ export default function App() {
               onChange={(e) => setCode(e.target.value)}
               onKeyUp={handleCursorUpdate}
               onClick={handleCursorUpdate}
-              placeholder="// Paste your accepted LeetCode solution here..."
+              onScroll={handleScroll}
+              onKeyDown={handleKeyDown}
+              placeholder="// Paste your accepted solution here..."
               spellCheck="false"
               autoComplete="off"
               autoCorrect="off"
@@ -370,48 +426,48 @@ export default function App() {
             />
           </div>
 
-          {/* Editor Status Bar */}
+          {/* IDE Bottom Status Bar */}
           <div className="editor-statusbar">
             <div className="status-left">
-              <span>UTF-8</span>
+              <span className="pill-status">{language.toUpperCase()}</span>
               <span className="divider">•</span>
-              <span>Spaces: 4</span>
+              <span>UTF-8</span>
               <span className="divider">•</span>
               <span>Ln {cursorPos.line}, Col {cursorPos.col}</span>
             </div>
             <div className="status-right">
               <span>{code.length} chars</span>
               <span className="divider">•</span>
-              <span>{code.split('\n').length} lines</span>
+              <span>{lineCount} lines</span>
             </div>
           </div>
 
-          {/* Bottom Controls */}
+          {/* Action Footer */}
           <div className="studio-footer">
             <button 
               type="button" 
-              className="btn-text-ghost" 
+              className="btn-ghost-clear" 
               onClick={() => { setCode(''); setDay(''); setProblemTitle(''); setSubmissionLink(''); }}
             >
-              Clear All
+              Clear Code
             </button>
 
             <button 
               type="button" 
-              className="btn-shimmer"
+              className="btn-iridescent-primary"
               onClick={handleGenerate}
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
-                  <span className="loader-ring"></span>
+                  <span className="spinner-glow"></span>
                   <span>Generating Caption...</span>
                 </>
               ) : (
                 <>
-                  <span className="btn-glow-icon">✨</span>
+                  <span className="btn-icon">⚡</span>
                   <span>Generate Caption</span>
-                  <span className="shortcut-tag">⌘↵</span>
+                  <span className="key-hint">Ctrl+↵</span>
                 </>
               )}
             </button>
@@ -420,147 +476,189 @@ export default function App() {
 
         {/* RIGHT COLUMN: Output & Post Studio */}
         <section className="studio-card preview-studio">
-          {/* Header Tabs */}
+          {/* Header Tabs with Colored Active States */}
           <div className="preview-header">
             <div className="tabs-container">
               <button 
                 className={`tab-btn ${activeTab === 'preview' ? 'active' : ''}`}
                 onClick={() => setActiveTab('preview')}
               >
-                LinkedIn Feed Preview
+                <span>💼 LinkedIn Preview</span>
               </button>
               <button 
                 className={`tab-btn ${activeTab === 'raw' ? 'active' : ''}`}
                 onClick={() => setActiveTab('raw')}
               >
-                Raw Text
+                <span>📄 Raw Text</span>
               </button>
               <button 
                 className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
                 onClick={() => setActiveTab('analytics')}
               >
-                Post Stats {caption && <span className="stat-badge">{analytics.words}w</span>}
+                <span>📊 Optimization Stats</span>
+                {caption && <span className="stat-score-pill">{analytics.score}%</span>}
               </button>
             </div>
 
             {caption && (
               <button 
-                className={`btn-copy ${copied ? 'copied' : ''}`} 
+                className={`btn-copy-gradient ${copied ? 'copied' : ''}`} 
                 onClick={handleCopy}
               >
-                {copied ? '✓ Copied to Clipboard' : '📋 Copy Caption'}
+                {copied ? '✓ Copied to Clipboard!' : '📋 Copy Caption'}
               </button>
             )}
           </div>
 
-          {/* Dynamic Content Area */}
+          {/* Output Body */}
           <div className="preview-body">
-            {/* Error Message */}
+            {/* Error Card */}
             {error && (
               <div className="error-card">
                 <span className="error-icon">⚠️</span>
                 <div className="error-text">
-                  <strong>Validation Notice</strong>
+                  <strong>Notice</strong>
                   <p>{error}</p>
                 </div>
               </div>
             )}
 
-            {/* Loading State */}
+            {/* Dynamic Colorful Loading Animation */}
             {isLoading && (
-              <div className="loading-card">
-                <div className="pulsing-brain">
-                  <div className="pulse-ring"></div>
-                  <span className="brain-icon">⚡</span>
+              <div className="loading-canvas">
+                <div className="glowing-spinner-orbit">
+                  <div className="orbit-ring"></div>
+                  <div className="orbit-dot"></div>
+                  <span className="orbit-core">✨</span>
                 </div>
-                <h3>Crafting Your Professional Caption</h3>
-                <p className="loading-step-text">{loadingMessages[loadingStep]}</p>
-                <div className="skeleton-container">
-                  <div className="skeleton-bar w-70"></div>
-                  <div className="skeleton-bar w-50"></div>
-                  <div className="skeleton-bar w-90"></div>
-                  <div className="skeleton-bar w-80"></div>
+                <h3>Architecting Your Post...</h3>
+                <p className="loading-step-live">{loadingMessages[loadingStep]}</p>
+                
+                <div className="skeleton-grid">
+                  <div className="skeleton-bar gradient-bar w-80"></div>
+                  <div className="skeleton-bar gradient-bar w-60"></div>
+                  <div className="skeleton-bar gradient-bar w-95"></div>
+                  <div className="skeleton-bar gradient-bar w-75"></div>
                 </div>
               </div>
             )}
 
             {/* Empty State */}
             {!isLoading && !caption && !error && (
-              <div className="empty-studio">
-                <div className="empty-sparkle-box">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/>
-                    <line x1="16" y1="17" x2="8" y2="17"/>
-                    <polyline points="10 9 9 9 8 9"/>
+              <div className="empty-canvas">
+                <div className="empty-hologram">
+                  <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                    <rect x="2" y="3" width="20" height="14" rx="2" stroke="url(#emptyGrad)"/>
+                    <line x1="8" y1="21" x2="16" y2="21" stroke="#6366f1"/>
+                    <line x1="12" y1="17" x2="12" y2="21" stroke="#6366f1"/>
+                    <defs>
+                      <linearGradient id="emptyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8"/>
+                        <stop offset="50%" stop-color="#818cf8"/>
+                        <stop offset="100%" stop-color="#ec4899"/>
+                      </linearGradient>
+                    </defs>
                   </svg>
                 </div>
-                <h3>Ready to Draft Your Next Post</h3>
-                <p>Paste your solution code on the left or select a preset problem, then click <strong>Generate Caption</strong> to see a ready-to-post LinkedIn update.</p>
-                <div className="quick-tip">
-                  <span className="tip-badge">TIP</span>
-                  <span>Streak day, title, and approach are seamlessly structured to build your personal brand.</span>
+                <h3>Your Next LinkedIn Post Awaits</h3>
+                <p>Paste your solution on the left or select a quick preset, then hit <strong>Generate Caption</strong> to produce an authentic, complexity-backed LinkedIn post.</p>
+                
+                <div className="feature-pills-row">
+                  <span className="feature-tag">🎯 First-person intuition</span>
+                  <span className="feature-tag">⏱️ O(n) Complexity</span>
+                  <span className="feature-tag">🔥 Streak Hashtags</span>
                 </div>
               </div>
             )}
 
-            {/* Generated Output */}
+            {/* Rendered Output Tabs */}
             {!isLoading && caption && (
               <>
-                {/* TAB 1: LinkedIn Realistic Feed Preview */}
+                {/* TAB 1: Colorful Realistic LinkedIn Post Mockup */}
                 {activeTab === 'preview' && (
-                  <div className="linkedin-post-mock">
-                    {/* User Header */}
-                    <div className="post-author-row">
-                      <div className="author-avatar">G</div>
-                      <div className="author-meta">
-                        <div className="author-name">Gokul</div>
-                        <div className="author-bio">B.Tech Artificial Intelligence & Data Science | Problem Solver</div>
-                        <div className="post-timestamp">Just now • 🌐</div>
+                  <div className="linkedin-post-card">
+                    {/* Decorative Gradient Banner at top of card */}
+                    <div className="post-gradient-banner" />
+
+                    {/* Author Row */}
+                    <div className="post-header-row">
+                      <div className="author-avatar-ring">
+                        <div className="author-avatar-inner">G</div>
+                      </div>
+                      <div className="author-info">
+                        <div className="author-name-row">
+                          <span className="author-name">Gokul</span>
+                          <span className="verified-shield" title="Verified Solution Architect">✦</span>
+                        </div>
+                        <div className="author-headline">B.Tech Artificial Intelligence & Data Science | Problem Solver</div>
+                        <div className="post-meta-sub">Just now • 🌐 Edited</div>
                       </div>
                     </div>
 
-                    {/* Post Content */}
-                    <div className="post-text-content">
+                    {/* Formatted Post Content */}
+                    <div className="post-body-text">
                       {caption}
                     </div>
 
-                    {/* LinkedIn Action Bar Mock */}
-                    <div className="linkedin-actions-mock">
-                      <div className="action-item">👍 Like</div>
-                      <div className="action-item">💬 Comment</div>
-                      <div className="action-item">🔁 Repost</div>
-                      <div className="action-item">📤 Send</div>
+                    {/* Simulated LinkedIn Engagement Bar */}
+                    <div className="post-social-bar">
+                      <div className="social-action">
+                        <span>👍 Like</span>
+                        <span className="count-pill">62</span>
+                      </div>
+                      <div className="social-action">
+                        <span>💬 Comment</span>
+                        <span className="count-pill">14</span>
+                      </div>
+                      <div className="social-action">
+                        <span>🔁 Repost</span>
+                        <span className="count-pill">8</span>
+                      </div>
+                      <div className="social-action">
+                        <span>📤 Share</span>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* TAB 2: Raw Text View */}
+                {/* TAB 2: Raw Monospace Text View */}
                 {activeTab === 'raw' && (
-                  <div className="raw-text-container">
-                    <pre className="raw-pre">{caption}</pre>
+                  <div className="raw-container">
+                    <pre className="raw-text-view">{caption}</pre>
                   </div>
                 )}
 
-                {/* TAB 3: Analytics View */}
+                {/* TAB 3: Visual Analytics & Optimization Score */}
                 {activeTab === 'analytics' && (
-                  <div className="analytics-grid">
-                    <div className="metric-card">
-                      <div className="metric-val">{analytics.words}</div>
-                      <div className="metric-label">Words</div>
+                  <div className="analytics-dashboard">
+                    <div className="score-banner">
+                      <div className="score-circle">
+                        <span className="score-number">{analytics.score}%</span>
+                        <span className="score-sub">OPTIMIZED</span>
+                      </div>
+                      <div className="score-desc">
+                        <h4>High LinkedIn Virality Potential</h4>
+                        <p>Includes authentic first-person algorithmic intuition, verified asymptotic complexity, and targeted streak tags.</p>
+                      </div>
                     </div>
-                    <div className="metric-card">
-                      <div className="metric-val">{analytics.chars}</div>
-                      <div className="metric-label">Characters</div>
-                    </div>
-                    <div className="metric-card">
-                      <div className="metric-val">{analytics.hashtags}</div>
-                      <div className="metric-label">Hashtags</div>
-                    </div>
-                    <div className="metric-card">
-                      <div className="metric-val">~{Math.max(1, Math.ceil(analytics.words / 180))}m</div>
-                      <div className="metric-label">Est. Read Time</div>
+
+                    <div className="metrics-grid">
+                      <div className="stat-card cyan">
+                        <div className="stat-val">{analytics.words}</div>
+                        <div className="stat-label">Word Count</div>
+                      </div>
+                      <div className="stat-card violet">
+                        <div className="stat-val">{analytics.chars}</div>
+                        <div className="stat-label">Total Characters</div>
+                      </div>
+                      <div className="stat-card amber">
+                        <div className="stat-val">{analytics.hashtags}</div>
+                        <div className="stat-label">Hashtags</div>
+                      </div>
+                      <div className="stat-card emerald">
+                        <div className="stat-val">~{Math.max(1, Math.ceil(analytics.words / 180))}m</div>
+                        <div className="stat-label">Read Time</div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -570,20 +668,24 @@ export default function App() {
         </section>
       </main>
 
-      {/* Professional Footer */}
+      {/* Professional Developer Footer */}
       <footer className="pro-footer">
-        <div className="footer-content">
+        <div className="footer-container">
           <div className="footer-left">
-            <span className="footer-author">Designed & Developed by <strong>Gokul</strong></span>
-            <span className="footer-tagline">B.Tech in Artificial Intelligence & Data Science</span>
+            <div className="footer-credit">
+              Designed & Developed by <strong>Gokul</strong>
+            </div>
+            <div className="footer-role">
+              B.Tech in Artificial Intelligence & Data Science
+            </div>
           </div>
 
           <div className="footer-right">
-            <div className="tech-pills">
-              <span className="tech-pill">React</span>
-              <span className="tech-pill">Node.js</span>
-              <span className="tech-pill">Express</span>
-              <span className="tech-pill">Gemini</span>
+            <div className="stack-badges">
+              <span className="stack-badge react">React 19</span>
+              <span className="stack-badge node">Node.js</span>
+              <span className="stack-badge express">Express</span>
+              <span className="stack-badge gemini">Gemini API</span>
             </div>
           </div>
         </div>
