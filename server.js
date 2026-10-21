@@ -71,7 +71,7 @@ My approach is to {explanation}
 Time Complexity: {time_complexity}
 Space Complexity: {space_complexity}
 
-#leetcode #500days ${dayTag} #streak #dailyproblem #DSA House Of Programming Expertise (HOPE)
+#leetcode ${dayTag} #streak #dailyproblem #DSA House Of Programming Expertise (HOPE)
 
 ### Guidelines:
 1. First line:
@@ -88,7 +88,7 @@ Space Complexity: {space_complexity}
    - Accurately determine Time Complexity and Space Complexity (auxiliary memory) strictly from the submitted code.
    - State them clearly as "Time Complexity: O(...)" and "Space Complexity: O(...)".
 5. Hashtags line:
-   - End with: "#leetcode #500days ${dayTag} #streak #dailyproblem #DSA House Of Programming Expertise (HOPE)"
+   - End with: "#leetcode ${dayTag} #streak #dailyproblem #DSA House Of Programming Expertise (HOPE)"
 6. Output format:
    - Return ONLY the clean, raw text of the post.
    - Do NOT wrap your output in markdown code fences (\`\`\` or \`\`\`markdown).

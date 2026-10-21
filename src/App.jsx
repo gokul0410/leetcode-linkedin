@@ -268,18 +268,12 @@ export default function App() {
               <div className="brand-title">
                 StreakForge <span className="pro-tag">PRO</span>
               </div>
-              <div className="brand-subtitle">LeetCode & LinkedIn AI Caption Architect</div>
+              <div className="brand-subtitle">LeetCode & LinkedIn Caption Architect</div>
             </div>
           </div>
 
           <div className="nav-badges">
-            <div className="status-pill">
-              <span className="status-dot green"></span>
-              <span>Gemini 3.5 Active</span>
-            </div>
-            <div className="streak-pill">
-              <span>🔥 500 Days Streak</span>
-            </div>
+            <span className="workspace-badge">Developer Studio</span>
           </div>
         </div>
       </header>
@@ -576,25 +570,21 @@ export default function App() {
         </section>
       </main>
 
-      {/* Production Grade Footer */}
+      {/* Professional Footer */}
       <footer className="pro-footer">
         <div className="footer-content">
           <div className="footer-left">
-            <span className="footer-heart">Made with ❤️ by <strong>Gokul</strong></span>
-            <span className="footer-tagline">B.Tech Artificial Intelligence and Data Science</span>
-          </div>
-
-          <div className="footer-center">
-            <div className="tech-pills">
-              <span className="tech-pill">React 19</span>
-              <span className="tech-pill">Node.js</span>
-              <span className="tech-pill">Express</span>
-              <span className="tech-pill">Google Gemini AI</span>
-            </div>
+            <span className="footer-author">Designed & Developed by <strong>Gokul</strong></span>
+            <span className="footer-tagline">B.Tech in Artificial Intelligence & Data Science</span>
           </div>
 
           <div className="footer-right">
-            <span className="version-tag">StreakForge v2.0 • Personal AI Tool</span>
+            <div className="tech-pills">
+              <span className="tech-pill">React</span>
+              <span className="tech-pill">Node.js</span>
+              <span className="tech-pill">Express</span>
+              <span className="tech-pill">Gemini</span>
+            </div>
           </div>
         </div>
       </footer>
