@@ -97,6 +97,7 @@ export default function App() {
   const [toast, setToast] = useState('');
 
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
+  const [theme, setTheme] = useState('rainbow'); // 'rainbow' | 'sunset' | 'cyber'
   const textareaRef = useRef(null);
   const lineNumbersRef = useRef(null);
 
@@ -279,7 +280,7 @@ export default function App() {
   const lineCount = Math.max(1, code.split('\n').length);
 
   return (
-    <div className="pro-app">
+    <div className={`pro-app theme-${theme}`}>
       {/* Vibrant Multi-Color Ambient Mesh Orbs */}
       <div className="ambient-mesh glow-pink" />
       <div className="ambient-mesh glow-blue" />
@@ -315,7 +316,7 @@ export default function App() {
           </div>
 
           <div className="nav-center-presets">
-            <span className="presets-label">⚡ QUICK PRESETS:</span>
+            <span className="presets-label">⚡ PRESETS:</span>
             {Object.values(PRESETS).map((p) => (
               <button 
                 key={p.id}
@@ -330,7 +331,32 @@ export default function App() {
           </div>
 
           <div className="nav-right">
-            <span className="developer-tag rainbow-tag">Developer Studio</span>
+            <div className="theme-toggle-group">
+              <button 
+                type="button"
+                className={`theme-pill ${theme === 'rainbow' ? 'active' : ''}`}
+                onClick={() => { setTheme('rainbow'); showToast('🌈 Cosmic Rainbow theme active'); }}
+                title="Cosmic Rainbow: Full vibrant spectrum"
+              >
+                🌈 Rainbow
+              </button>
+              <button 
+                type="button"
+                className={`theme-pill ${theme === 'sunset' ? 'active' : ''}`}
+                onClick={() => { setTheme('sunset'); showToast('🌅 Sunset Glow theme active'); }}
+                title="Sunset Glow: Pink, Amber, and Tangerine"
+              >
+                🌅 Sunset
+              </button>
+              <button 
+                type="button"
+                className={`theme-pill ${theme === 'cyber' ? 'active' : ''}`}
+                onClick={() => { setTheme('cyber'); showToast('⚡ Cyber Neon theme active'); }}
+                title="Cyber Neon: Emerald Green and Cyan Blue"
+              >
+                ⚡ Cyber
+              </button>
+            </div>
           </div>
         </div>
       </header>
